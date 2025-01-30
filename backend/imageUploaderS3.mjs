@@ -27,7 +27,7 @@ export const imageUploaderS3 = async ({
 
     //Final check the file type as stream as we can't trust the extension given by the client.
     const realFileType = await fileTypeFromStream(fileStream);
-    if (allowedTypes.includes(realFileType.mime) == -1) {
+    if (!realFileType || !allowedTypes.includes(realFileType.mime)) {
       throw Error("Invalid image type " + realFileType.mime);
     }
 
