@@ -2,6 +2,7 @@ import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { Upload } from "@aws-sdk/lib-storage";
 import fs from "fs";
 import { v4 as uuid } from "uuid";
+import { fileTypeFromStream } from "file-type";
 
 const s3 = new S3Client();
 const BUCKET = process.env.BUCKET;
@@ -15,6 +16,7 @@ export const imageUploaderS3 = async ({
   fileType = "image/jpg",
   extensionType = "",
   shouldDeleteLocalAsset = true,
+  allowedTypes = ["image/jpeg", "image/png", "image/jpg"],
 }) => {
   //best to remove userId for better security
 
@@ -22,6 +24,12 @@ export const imageUploaderS3 = async ({
     const fileStream = fs.createReadStream(file_URI, function (err, data) {
       if (err) throw err;
     });
+
+    //Final check the file type as stream as we can't trust the extension given by the client.
+    const realFileType = await fileTypeFromStream(fileStream);
+    if (allowedTypes.includes(realFileType.mime) == -1) {
+      throw Error("Invalid image type " + realFileType.mime);
+    }
 
     const key = `${bucket_base_path}/${userId}/${uuid()}${extensionType}`;
     const input = {

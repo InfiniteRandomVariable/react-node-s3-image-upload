@@ -4,14 +4,10 @@ import { multerMiddleware } from "./multerMiddleware.mjs";
 import cors from "cors";
 import fs from "fs";
 import { imageUploaderS3 } from "./imageUploaderS3.mjs";
-//const __filename = fileURLToPath(import.meta.url);
-//const __dirname = dirname(__filename);
-//console.log("__dirname: " + __dirname);
+
 const app = express();
 
 const PORT = process.env.PORT || 4000;
-const HOST = process.env.HOST;
-const frontendURL = process.env.FRONTEND_URL;
 
 const allowedTypes = ["image/jpeg", "image/png", "image/jpg"];
 function deleteAllLocalImages({ files }) {
@@ -63,7 +59,6 @@ app.post("/images", multerMiddleware, (req, res) => {
         });
         keys.append(key);
         if (error) {
-          console.log("about to call upload to S3 error 5");
           throw error;
         }
       });
