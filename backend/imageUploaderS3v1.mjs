@@ -1,11 +1,10 @@
-import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { S3Client } from "@aws-sdk/client-s3";
 import { Upload } from "@aws-sdk/lib-storage";
 import { pipeline } from "stream";
 
 import util from "util";
 import fs from "fs";
 import { v4 as uuid } from "uuid";
-import { fileTypeFromStream } from "file-type";
 import sharp from "sharp"; // Import as default
 const _pipeline = util.promisify(pipeline);
 const s3 = new S3Client();

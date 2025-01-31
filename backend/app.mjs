@@ -3,7 +3,7 @@ import express, { json } from "express";
 import { multerMiddleware } from "./multerMiddleware.mjs";
 import cors from "cors";
 import fs from "fs";
-import { imageUploaderS3 } from "./imageUploaderS3_copy.mjs";
+import { imageUploaderS3 } from "./imageUploaderS3v1.mjs";
 
 const app = express();
 
