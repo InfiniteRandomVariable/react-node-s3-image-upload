@@ -69,6 +69,7 @@ export const imageUploaderS3 = async ({
     } else {
       const awsPutCommand = new PutObjectCommand(input);
       await s3.send(awsPutCommand);
+      await deleteLocalFiles();
     }
   }
 
@@ -92,10 +93,10 @@ export const imageUploaderS3 = async ({
 
     let writer = fs.createWriteStream(fileURIExtension);
 
-    //Issue: thi function return without waiting for the completion of S3Upload. So the client side won't know the occured problem during the upload
+    //Issue: this function return without waiting for the completion of S3Upload. So the client side won't know the occured problem during the upload
     // Why use pipeline? It is fast, efficent, stable and industry standard.
     //Meaning, because of the pipeline
-    // fail attempt:
+    // Fail attempt:
     // line 1  await pipeline ...
     // line 2  await S3UploadProcedure(key) ...
 
@@ -111,8 +112,6 @@ export const imageUploaderS3 = async ({
     await writer.on("finish", (err) => {
       S3UploadProcedure(key);
     });
-
-    console.log("Before I am returning");
 
     console.log("I am returning");
 

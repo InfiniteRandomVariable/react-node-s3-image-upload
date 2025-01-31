@@ -40,11 +40,14 @@ export const imageUploaderS3 = async ({
     }
   }
   //best to remove userId for better security
-  async function S3UploadProcedure(key) {
+  async function S3UploadProcedure(key, resolve, reject) {
     const awsFileStream = fs.createReadStream(
       fileURIExtension,
       function (err, data) {
-        if (err) throw err;
+        if (err) {
+          reject(err);
+          throw err;
+        }
       }
     );
     const input = {
@@ -68,9 +71,11 @@ export const imageUploaderS3 = async ({
       });
       await multipartUpload.done();
       await deleteLocalFiles();
+      resolve();
     } else {
       const awsPutCommand = new PutObjectCommand(input);
       await s3.send(awsPutCommand);
+      resolve();
     }
   }
 
@@ -93,20 +98,10 @@ export const imageUploaderS3 = async ({
 
   let writer = fs.createWriteStream(fileURIExtension);
 
-  //Issue: thi function return without waiting for the completion of S3Upload. So the client side won't know the occured problem during the upload
-  // Why use pipeline? It is fast, efficent, stable and industry standard.
-  //Meaning, because of the pipeline
-  // fail attempt:
-  // line 1  await pipeline ...
-  // line 2  await S3UploadProcedure(key) ...
-
-  return _pipeline(originalFileStream, transfomer, writer)
+  return await _pipeline(originalFileStream, transfomer, writer)
     .then(() => {
       return new Promise((resolve, reject) => {
-        writer.on("finish", (err) => {
-          console.log("writing to s3 starting...");
-          S3UploadProcedure(key);
-        });
+        S3UploadProcedure(key, resolve, reject);
       });
     })
     .then(() => {
@@ -118,14 +113,3 @@ export const imageUploaderS3 = async ({
       return err;
     });
 };
-
-// console.log("Before I am returning");
-
-// console.log("I am returning");
-
-// } catch (error) {
-//   console.log(error);
-//   deleteLocalFiles();
-//   return error;
-// }
-//};

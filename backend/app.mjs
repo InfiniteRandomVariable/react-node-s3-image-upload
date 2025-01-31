@@ -3,7 +3,7 @@ import express, { json } from "express";
 import { multerMiddleware } from "./multerMiddleware.mjs";
 import cors from "cors";
 import fs from "fs";
-import { imageUploaderS3 } from "./imageUploaderS3.mjs";
+import { imageUploaderS3 } from "./imageUploaderS3_copy.mjs";
 
 const app = express();
 
@@ -37,7 +37,7 @@ app.post("/images", multerMiddleware, async function (req, res) {
   let keys = [];
   try {
     if (files && files.length > 0) {
-      for (const theFile of files) {
+      for await (const theFile of files) {
         const file_URI = `${theFile.path}`;
         const userId = 10034;
         const fileType = `${theFile.mimetype}`;
@@ -47,6 +47,7 @@ app.post("/images", multerMiddleware, async function (req, res) {
           userId,
           fileType,
         });
+        console.log("for loop await");
         keys.push(key);
         if (error) {
           throw error;
