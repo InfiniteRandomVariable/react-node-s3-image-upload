@@ -32,7 +32,7 @@ const storage = multer.diskStorage({
     cb(null, imagePath);
   },
   filename: function (req, file, cb) {
-    const fileName = file.originalname;
+    const fileName = file.originalname.replace(/.jpg|.png|.jpeg/gi, "");
 
     cb(null, fileName);
   },

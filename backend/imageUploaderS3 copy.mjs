@@ -1,11 +1,13 @@
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { Upload } from "@aws-sdk/lib-storage";
 import { pipeline } from "stream";
+
+import util from "util";
 import fs from "fs";
 import { v4 as uuid } from "uuid";
 import { fileTypeFromStream } from "file-type";
 import sharp from "sharp"; // Import as default
-
+const _pipeline = util.promisify(pipeline);
 const s3 = new S3Client();
 const BUCKET = process.env.BUCKET;
 //change your S3 bucket key
@@ -72,54 +74,58 @@ export const imageUploaderS3 = async ({
     }
   }
 
-  try {
-    const key = `${bucket_base_path}/${userId}/${uuid()}${extensionType}`;
-    const originalFileStream = fs.createReadStream(
-      file_URI,
-      function (err, data) {
-        if (err) throw err;
-      }
-    );
+  const key = `${bucket_base_path}/${userId}/${uuid()}${extensionType}`;
+  const originalFileStream = fs.createReadStream(
+    file_URI,
+    function (err, data) {
+      if (err) throw err;
+    }
+  );
 
-    const transfomer = sharp()
-      .resize({
-        width: resizeImageTo,
-        height: resizeImageTo,
-        fit: sharp.fit.cover,
-        position: sharp.strategy.entropy,
-      })
-      .jpeg({ mozjpeg: true });
+  const transfomer = sharp()
+    .resize({
+      width: resizeImageTo,
+      height: resizeImageTo,
+      fit: sharp.fit.cover,
+      position: sharp.strategy.entropy,
+    })
+    .jpeg({ mozjpeg: true });
 
-    let writer = fs.createWriteStream(fileURIExtension);
+  let writer = fs.createWriteStream(fileURIExtension);
 
-    //Issue: thi function return without waiting for the completion of S3Upload. So the client side won't know the occured problem during the upload
-    // Why use pipeline? It is fast, efficent, stable and industry standard.
-    //Meaning, because of the pipeline
-    // fail attempt:
-    // line 1  await pipeline ...
-    // line 2  await S3UploadProcedure(key) ...
+  //Issue: thi function return without waiting for the completion of S3Upload. So the client side won't know the occured problem during the upload
+  // Why use pipeline? It is fast, efficent, stable and industry standard.
+  //Meaning, because of the pipeline
+  // fail attempt:
+  // line 1  await pipeline ...
+  // line 2  await S3UploadProcedure(key) ...
 
-    await pipeline(originalFileStream, transfomer, writer, (err) => {
-      if (err) {
-        console.error("Pipeline failed", err);
-        throw err;
-      } else {
-        console.log("Pipeline succeeded");
-      }
+  return _pipeline(originalFileStream, transfomer, writer)
+    .then(() => {
+      return new Promise((resolve, reject) => {
+        writer.on("finish", (err) => {
+          console.log("writing to s3 starting...");
+          S3UploadProcedure(key);
+        });
+      });
+    })
+    .then(() => {
+      console.log("returning key");
+      return { key };
+    })
+    .catch((err) => {
+      console.log(err);
+      return err;
     });
-
-    await writer.on("finish", (err) => {
-      S3UploadProcedure(key);
-    });
-
-    console.log("Before I am returning");
-
-    console.log("I am returning");
-
-    return { key };
-  } catch (error) {
-    console.log(error);
-    deleteLocalFiles();
-    return error;
-  }
 };
+
+// console.log("Before I am returning");
+
+// console.log("I am returning");
+
+// } catch (error) {
+//   console.log(error);
+//   deleteLocalFiles();
+//   return error;
+// }
+//};

@@ -30,41 +30,32 @@ app.use(json());
 
 app.get("/", (req, res) => res.send("success"));
 
-app.post("/images", multerMiddleware, (req, res) => {
+app.post("/images", multerMiddleware, async function (req, res) {
   const files = req.files;
 
   //after successful upload to the asset and it should be deleted and save the URI to database.
   let keys = [];
   try {
     if (files && files.length > 0) {
-      files.forEach((theFile) => {
+      for (const theFile of files) {
         const file_URI = `${theFile.path}`;
         const userId = 10034;
         const fileType = `${theFile.mimetype}`;
-        const matchImageTypeIndex = allowedTypes.indexOf(fileType);
-        let extensionType = "";
-        if (matchImageTypeIndex !== -1) {
-          //get file extension type
-          const theExtensionStr = allowedTypes[matchImageTypeIndex];
-          const isPng = theExtensionStr.includes("png");
-          extensionType = isPng ? ".png" : ".jpg";
-        } else {
-          throw Error("Must be a valid file type " + allowedTypes);
-        }
-        const { error, key } = imageUploaderS3({
+
+        const { error, key } = await imageUploaderS3({
           file_URI,
           userId,
           fileType,
-          extensionType,
         });
-        keys.append(key);
+        keys.push(key);
         if (error) {
           throw error;
         }
-      });
+      }
     }
   } catch (err) {
     deleteAllLocalImages(files);
+    console.log("Error message - " + err.message);
     return res.status(500).json(err);
   }
 
