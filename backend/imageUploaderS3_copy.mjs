@@ -27,7 +27,7 @@ export const imageUploaderS3 = async ({
   let extensionType = ".jpg";
   const fileURIExtension = file_URI + extensionType;
 
-  async function deleteLocalFiles() {
+  function deleteLocalFiles() {
     if (shouldDeleteLocalAsset) {
       console.log("Deleting the local files");
       fs.unlinkSync(file_URI, (e) => {
@@ -40,12 +40,11 @@ export const imageUploaderS3 = async ({
     }
   }
   //best to remove userId for better security
-  async function S3UploadProcedure(key, resolve, reject) {
+  function S3UploadProcedure(key) {
     const awsFileStream = fs.createReadStream(
       fileURIExtension,
       function (err, data) {
         if (err) {
-          reject(err);
           throw err;
         }
       }
@@ -57,26 +56,17 @@ export const imageUploaderS3 = async ({
       ContentType: fileType,
     };
 
-    const isUnknownStreamSizeUpload = true;
-
-    if (isUnknownStreamSizeUpload === true) {
-      const multipartUpload = new Upload({
-        client: s3,
-        params: input,
-      });
-      //Debugging (optional)
-      multipartUpload.on("httpUploadProgress", (progress) => {
-        console.log("multipartUpload progress");
-        console.log(progress);
-      });
-      await multipartUpload.done();
-      await deleteLocalFiles();
-      resolve();
-    } else {
-      const awsPutCommand = new PutObjectCommand(input);
-      await s3.send(awsPutCommand);
-      resolve();
-    }
+    const multipartUpload = new Upload({
+      client: s3,
+      params: input,
+    });
+    //Debugging (optional)
+    multipartUpload.on("httpUploadProgress", (progress) => {
+      console.log("multipartUpload progress");
+      console.log(progress);
+    });
+    //return a promise
+    return multipartUpload.done();
   }
 
   const key = `${bucket_base_path}/${userId}/${uuid()}${extensionType}`;
@@ -98,17 +88,17 @@ export const imageUploaderS3 = async ({
 
   let writer = fs.createWriteStream(fileURIExtension);
 
-  return await _pipeline(originalFileStream, transfomer, writer)
+  return _pipeline(originalFileStream, transfomer, writer)
     .then(() => {
-      return new Promise((resolve, reject) => {
-        S3UploadProcedure(key, resolve, reject);
-      });
+      return S3UploadProcedure(key);
     })
     .then(() => {
-      console.log("returning key");
+      deleteLocalFiles();
+      console.log("deleted files && returning key");
       return { key };
     })
     .catch((err) => {
+      deleteLocalFiles();
       console.log(err);
       return err;
     });

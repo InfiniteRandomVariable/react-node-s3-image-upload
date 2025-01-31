@@ -1,6 +1,6 @@
 1. Write to disk instead of using system RAM for temp storage of image data.
-2. More secure file checking prior to upload to S3.
-3. Support upload multiple images instead of one image.
+2. Reformat the file to jpg prior uploading to S3 for more secure and higher efficiency
+3. Support upload multiple images instead of one image, currently we only test one image.
 4. Files with valid image extensions will add to each file.
 5. Delete the local disk storage for these images after each upload
 6. Use chakra-ui for UI coz of it is a standard choice and time-saving.
