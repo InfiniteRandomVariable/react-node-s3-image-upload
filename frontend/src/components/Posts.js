@@ -13,6 +13,7 @@ import useQuery from '../hooks/useQuery';
 
 const validFileTypes = ['image/jpg', 'image/jpeg', 'image/png'];
 const URL = '/images';
+const uploadURL = '/uploadImages';
 
 const ErrorText = ({ children, ...props }) => (
   <Text fontSize="lg" color="red.300" {...props}>
@@ -27,7 +28,7 @@ const Posts = () => {
     mutate: uploadImage,
     isLoading: uploading,
     error: uploadError,
-  } = useMutation({ url: URL });
+  } = useMutation({ url: uploadURL });
 
   const {
     data: imageUrls = [],
@@ -38,15 +39,16 @@ const Posts = () => {
   const [error, setError] = useState('');
 
   const handleUpload = async e => {
-    const file = e.target.files[0];
-
-    if (!validFileTypes.find(type => type === file.type)) {
-      setError('File must be in JPG/PNG format');
-      return;
-    }
-
+    const files = e.target.files;
+    console.log('files.length ' + files.length);
     const form = new FormData();
-    form.append('image', file);
+    for (const file of files) {
+      if (!validFileTypes.find(type => type === file.type)) {
+        setError('File must be in JPG/PNG format');
+        return;
+      }
+      form.append('images[]', file);
+    }
 
     await uploadImage(form);
 
@@ -74,7 +76,13 @@ const Posts = () => {
 
   return (
     <Box mt={6}>
-      <Input id="imageInput" type="file" hidden onChange={handleUpload} />
+      <Input
+        id="imageInput"
+        type="file"
+        multiple="multiple"
+        hidden
+        onChange={handleUpload}
+      />
       <Button
         as="label"
         htmlFor="imageInput"

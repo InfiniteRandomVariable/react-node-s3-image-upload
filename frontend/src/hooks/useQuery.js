@@ -3,6 +3,7 @@ import axiosClient from '../config/axios';
 
 const useQuery = (url, refetch) => {
   //TODO: Cache strategy should be specific to each case. This is just a general demo.
+  const shouldEnableCache = true;
   const [cacheState, setCacheState] = useState([]);
   const [state, setState] = useState({
     data: null,
@@ -49,7 +50,7 @@ const useQuery = (url, refetch) => {
     };
 
     const _data = getThisCacheData(url);
-    if (_data) {
+    if (shouldEnableCache && _data) {
       console.log('Use cache data');
       queueMicrotask(() => {
         const data = _data;

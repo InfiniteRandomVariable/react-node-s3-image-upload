@@ -29,19 +29,32 @@ export const imageUploaderS3 = async ({
   const fileURIExtension = file_URI + extensionType;
 
   function deleteLocalFiles() {
-    if (shouldDeleteLocalAsset) {
-      console.log("Deleting the local files");
-      fs.unlinkSync(file_URI, (e) => {
-        console.log(e);
-      });
+    //Consider to use Promisify
+    return new Promise((resolve, reject) => {
+      if (shouldDeleteLocalAsset) {
+        console.log("Deleting the local files");
 
-      fs.unlinkSync(fileURIExtension, (e) => {
-        console.log(e);
-      });
-    }
+        fs.unlinkSync(file_URI, (e) => {
+          console.log(e);
+          reject(e);
+        });
+
+        fs.unlinkSync(fileURIExtension, (e) => {
+          console.log(e);
+          reject(e);
+        });
+        resolve();
+      } else {
+        resolve();
+      }
+    }).catch((e) => {
+      throw e;
+    });
   }
+
   //best to remove userId for better security
   function S3UploadProcedure(key) {
+    console.log("S3UploadProcedure");
     const awsFileStream = fs.createReadStream(
       fileURIExtension,
       function (err, data) {
@@ -89,18 +102,35 @@ export const imageUploaderS3 = async ({
 
   let writer = fs.createWriteStream(fileURIExtension);
 
-  return _pipeline(originalFileStream, transfomer, writer)
-    .then(() => {
-      return S3UploadProcedure(key);
-    })
-    .then(() => {
-      deleteLocalFiles();
-      console.log("deleted files && returning key");
-      return { key };
-    })
-    .catch((err) => {
-      deleteLocalFiles();
-      console.log(err);
-      return err;
+  try {
+    await _pipeline(originalFileStream, transfomer, writer);
+    await S3UploadProcedure(key);
+    await deleteLocalFiles();
+
+    return new Promise((resolve) => {
+      console.log("returning key");
+      resolve({
+        key,
+      });
     });
+  } catch (e) {
+    console.log(e);
+    throw e;
+  }
 };
+
+// return _pipeline(originalFileStream, transfomer, writer)
+//   .then(() => {
+//     return S3UploadProcedure(key);
+//   })
+//   .then(() => {
+//     deleteLocalFiles();
+//     console.log("deleted files && returning key");
+//     return { key };
+//   })
+//   .catch((err) => {
+//     deleteLocalFiles();
+//     console.log(err);
+//     return err;
+//   });
+//};

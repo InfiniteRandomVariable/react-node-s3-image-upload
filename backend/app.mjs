@@ -60,8 +60,11 @@ app.get("/images", async (req, res) => {
   return res.json(presignedUrls);
 });
 
-app.post("/images", multerMiddleware, async function (req, res) {
+app.post("/uploadImages", multerMiddleware, async function (req, res) {
+  console.log("post images 1");
   const files = req.files;
+
+  console.log("files.length " + files.length);
 
   //after successful upload to the asset and it should be deleted and save the URI to database.
   let keys = [];
@@ -77,7 +80,7 @@ app.post("/images", multerMiddleware, async function (req, res) {
           userId,
           fileType,
         });
-        console.log("for loop await");
+        console.log("outter for loop await");
         keys.push(key);
         if (error) {
           throw error;

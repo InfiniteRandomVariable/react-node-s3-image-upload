@@ -48,6 +48,8 @@ export const multerMiddleware = (req, res, next) => {
   //upload.array("images[]"
   //frontend FormData form.append('images[]', file);
   return upload.array("images[]", maxAllowUploadImages)(req, res, (err) => {
+    console.log("req.files");
+    console.log(req.files);
     if (!req.files) return res.json({ error: ErrorMessages.invalidFiletype });
     if (err) {
       console.log("line 51 " + err.message);
