@@ -1,27 +1,17 @@
-import { Box, Button, Text, Input } from '@chakra-ui/react';
+import {
+  Box,
+  Button,
+  CircularProgress,
+  Image,
+  Input,
+  SimpleGrid,
+  Text,
+} from '@chakra-ui/react';
 import { useState } from 'react';
 import useMutation from '../hooks/useMutations';
+import useQuery from '../hooks/useQuery';
 
-//import { fileTypeFromFile } from 'file-type'; need EMS but this is CommonJS format
-//issue https://github.com/sindresorhus/file-type/issues/662
-
-// const imageFilesValidation = async (files, next) => {
-//   try {
-//     for (const file in files) {
-
-//       const type = await fileTypeFromFile(file.name);
-//       // validate
-//       const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
-//       if (!type || !allowedTypes.includes(type.mime))
-//         return next(new Error('Invalid file type'));
-
-//       return next();
-//     }
-//   } catch (error) {
-//     return next(new Error('Internal server error'));
-//   }
-// };
-
+const validFileTypes = ['image/jpg', 'image/jpeg', 'image/png'];
 const URL = '/images';
 
 const ErrorText = ({ children, ...props }) => (
@@ -31,30 +21,41 @@ const ErrorText = ({ children, ...props }) => (
 );
 
 const Posts = () => {
+  const [refetch, setRefetch] = useState(0);
   const {
     mutate: uploadImage,
-    isLoading: upLoading,
+    isLoading: uploading,
     error: uploadError,
   } = useMutation({ url: URL });
+
+  const {
+    data: imageUrls = [],
+    isLoading: imagesLoading,
+    error: fetchError,
+  } = useQuery(URL, refetch);
+
   const [error, setError] = useState('');
+
   const handleUpload = async e => {
-    console.log(e);
     const file = e.target.files[0];
-    console.log(file);
 
-    //TODO add image validator of your choice. See the top comment
-    const validateImg = true;
-
-    if (validateImg == false) {
-      console.log('validating image failed');
+    if (!validFileTypes.find(type => type === file.type)) {
       setError('File must be in JPG/PNG format');
       return;
     }
 
     const form = new FormData();
-    form.append('images[]', file);
+    form.append('image', file);
 
     await uploadImage(form);
+    setTimeout(() => {
+      setRefetch(s => s + 1);
+    }, 1000);
+  };
+
+  const handleRefetch = async e => {
+    console.log('handleRefetch');
+    setRefetch(s => s + 1);
   };
 
   return (
@@ -65,18 +66,55 @@ const Posts = () => {
         htmlFor="imageInput"
         colorScheme="blue"
         variant="outline"
-        mb={4}
+        mb={3}
         cursor="pointer"
-        isLoading={upLoading}
+        isLoading={uploading}
       >
         Upload
       </Button>
+
+      <Input id="cacheInput" type="button" hidden onClick={handleRefetch} />
+      <Button
+        as="label"
+        htmlFor="cacheInput"
+        colorScheme="red"
+        variant="outline"
+        mb={3}
+        cursor="pointer"
+      >
+        TestCache
+      </Button>
+
       {error && <ErrorText>{error}</ErrorText>}
       {uploadError && <ErrorText>{uploadError}</ErrorText>}
 
       <Text textAlign="left" mb={4}>
         Posts
       </Text>
+      {imagesLoading && (
+        <CircularProgress
+          color="gray.600"
+          trackColor="blue.300"
+          size={7}
+          thickness={10}
+          isIndeterminate
+        />
+      )}
+      {fetchError && (
+        <ErrorText textAlign="left">Failed to load images</ErrorText>
+      )}
+      {!fetchError && imageUrls?.length === 0 && (
+        <Text textAlign="left" fontSize="lg" color="gray.500">
+          No images found
+        </Text>
+      )}
+
+      <SimpleGrid columns={[1, 2, 3]} spacing={4}>
+        {imageUrls?.length > 0 &&
+          imageUrls.map(url => (
+            <Image borderRadius={5} src={url} alt="Image" key={url} />
+          ))}
+      </SimpleGrid>
     </Box>
   );
 };

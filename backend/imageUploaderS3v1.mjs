@@ -13,6 +13,8 @@ const BUCKET = process.env.BUCKET;
 // e.g. bucket/p/yourasset
 //https://github.com/aws/aws-sdk-js/issues/2961
 
+//Further optimization https://www.geeksforgeeks.org/node-js-util-promisify-method/
+
 //This method can delete the asset after its task as you choose.
 const bucket_base_path = "p";
 export const imageUploaderS3 = async ({

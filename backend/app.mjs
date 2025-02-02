@@ -6,6 +6,17 @@ import fs from "fs";
 import { imageUploaderS3 } from "./imageUploaderS3v1.mjs";
 
 const app = express();
+const mockImageUrls = [
+  "https://mpgimg.s3.us-west-2.amazonaws.com/p/10034/662c42f1-7fff-4655-aa16-a2897a881c7d.jpg",
+  "https://mpgimg.s3.us-west-2.amazonaws.com/p/10034/34575fad-e4ff-4916-9608-51e2dd934e65.jpg",
+  "https://mpgimg.s3.us-west-2.amazonaws.com/p/10034/ee654ea7-3ec7-4f6b-9c37-219eaae70b4b.jpg",
+  "https://mpgimg.s3.us-west-2.amazonaws.com/p/10034/7d8c0efc-735a-47e3-9f7e-326ff2ad1ec5.jpg",
+  "https://mpgimg.s3.us-west-2.amazonaws.com/p/10034/632e0abf-6d9f-439f-9c0f-3748541dc514.jpg",
+  "https://mpgimg.s3.us-west-2.amazonaws.com/p/10034/5ac7a5f3-ecba-4bd0-a95d-46bcc5bbfea6.jpg",
+  "https://mpgimg.s3.us-west-2.amazonaws.com/p/10034/a879e43e-9e57-4b6d-a98c-d515d32487b4.jpg",
+  "https://mpgimg.s3.us-west-2.amazonaws.com/p/10034/fe46edc7-bf84-45af-b336-93ba2ff44368.jpg",
+  "https://mpgimg.s3.us-west-2.amazonaws.com/p/10034/6a6d58b4-aceb-4bfa-a008-d962919bec50.jpg",
+];
 
 const PORT = process.env.PORT || 4000;
 
@@ -29,6 +40,25 @@ app.use(
 app.use(json());
 
 app.get("/", (req, res) => res.send("success"));
+
+app.get("/images", async (req, res) => {
+  console.log("get images 1");
+  const userId = req.headers["x-user-id"];
+
+  if (!userId) return res.status(400).json({ message: "Bad request" });
+  console.log("get images 2");
+  const { error, presignedUrls } = {
+    error: null,
+    presignedUrls: mockImageUrls,
+  };
+
+  console.log("get images 3");
+  if (error) return res.status(400).json({ message: error.message });
+
+  console.log("get images 4");
+
+  return res.json(presignedUrls);
+});
 
 app.post("/images", multerMiddleware, async function (req, res) {
   const files = req.files;
