@@ -21,6 +21,7 @@ const ErrorText = ({ children, ...props }) => (
 );
 
 const Posts = () => {
+  const [timeoutting, setTimeoutting] = useState(false);
   const [refetch, setRefetch] = useState(0);
   const {
     mutate: uploadImage,
@@ -48,9 +49,22 @@ const Posts = () => {
     form.append('image', file);
 
     await uploadImage(form);
-    setTimeout(() => {
-      setRefetch(s => s + 1);
-    }, 1000);
+
+    // Wait one second to refresh the page after the image has been uploaded.
+    //Don't recommended.
+    if (
+      timeoutting === false &&
+      fetchError == '' &&
+      fetchError == null &&
+      uploadError == '' &&
+      uploadError == null
+    ) {
+      setTimeoutting(true);
+      setTimeout(() => {
+        setTimeoutting(false);
+        setRefetch(s => s + 1);
+      }, 5000);
+    }
   };
 
   const handleRefetch = async e => {

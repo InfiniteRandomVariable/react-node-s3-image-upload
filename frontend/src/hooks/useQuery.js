@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import axiosClient from '../config/axios';
 
 const useQuery = (url, refetch) => {
+  //TODO: Cache strategy should be specific to each case. This is just a general demo.
   const [cacheState, setCacheState] = useState([]);
   const [state, setState] = useState({
     data: null,
@@ -64,31 +65,3 @@ const useQuery = (url, refetch) => {
 };
 
 export default useQuery;
-
-// import { useEffect, useState } from 'react';
-// import axiosClient from '../config/axios';
-
-// const useQuery = (url, refetch) => {
-//   const [state, setState] = useState({
-//     data: null,
-//     isLoading: true,
-//     error: '',
-//   });
-
-//   useEffect(() => {
-//     const fetch = async () => {
-//       axiosClient
-//         .get(url)
-//         .then(({ data }) => setState({ data, isLoading: false, error: '' }))
-//         .catch(error =>
-//           setState({ data: null, isLoading: false, error: error.message })
-//         );
-//     };
-
-//     fetch();
-//   }, [url, refetch]);
-
-//   return state;
-// };
-
-// export default useQuery;
