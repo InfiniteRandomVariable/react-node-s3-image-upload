@@ -4,8 +4,9 @@
 4. Files with valid image extensions will add to each file.
 5. Delete the local disk storage for these images after each upload
 6. Use chakra-ui for UI coz of it is a standard choice and time-saving.
-7. Image resizing, positioning, cropping by reducing the file size by more than 80%, depending on the original size of the file.
-8. Change to typescript later.
+7. Image resizing, positioning, backend cropping by reducing the file size by more than 80%, depending on the original size of the file.
+8. UI multi image cropper (low priority)
+   Optionally Change to typescript later.
 
 Adding listeners and events References:
 https://www.falldowngoboone.com/blog/talk-to-your-react-components-with-custom-events/
