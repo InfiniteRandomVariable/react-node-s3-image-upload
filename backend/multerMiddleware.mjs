@@ -53,6 +53,7 @@ export const multerMiddleware = (req, res, next) => {
     if (!req.files) return res.json({ error: ErrorMessages.invalidFiletype });
     if (err) {
       console.log("line 51 " + err.message);
+      console.log(err);
       return res.status(400).json({ error: err.message });
     }
 

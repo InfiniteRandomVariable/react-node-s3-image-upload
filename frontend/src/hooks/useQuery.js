@@ -2,7 +2,9 @@ import { useEffect, useState } from 'react';
 import axiosClient from '../config/axios';
 
 const useQuery = (url, refetch) => {
+  const fetchEvent = new Event('fetch');
   //TODO: Cache strategy should be specific to each case. This is just a general demo.
+  //Microtask implementation is incomplete as it needs to grab an element and listeners inside each in and else clause.
   const shouldEnableCache = true;
   const [cacheState, setCacheState] = useState([]);
   const [state, setState] = useState({
@@ -52,6 +54,7 @@ const useQuery = (url, refetch) => {
     const _data = getThisCacheData(url);
     if (shouldEnableCache && _data) {
       console.log('Use cache data');
+
       queueMicrotask(() => {
         const data = _data;
         setState({ data, isLoading: false, error: null });
